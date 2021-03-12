@@ -90,12 +90,145 @@ namespace LineCounter.Tests
                         {
                             "Line1",
                              string.Empty,
-                            "Line2",
                             "Line3",
                             "Line4",
                             "Line5",
-                            "Line6"
+                            "Line6",
+                            "Line7"
                         };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+
+                [Test]
+                public void ShouldExcludeLinesThatAreDoubleForwardSlashComments()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 5;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "// Some comment",
+                        "Line3",
+                        " //Some other comment",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+                
+                [Test]
+                public void ShouldExcludeLinesThatAreContainedWithinABlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 4;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "/* First line of comment",
+                        "Second line of comment",
+                        "last line of comment */",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }     
+                
+                [Test]
+                public void ShouldExcludeAllLinesThatAreContainedWithinABlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 5;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "/* First line of comment",
+                        "Second line of comment",
+                        "last line of comment */",
+                        "Line5",
+                        "Line6",
+                        "/* First line of comment",
+                        "last line of comment */",
+                        "Line9",
+                        "Line10"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+                
+                [Test]
+                public void ShouldIncludeLinesThatContainValidText_AndADoubleForwardSlashComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 7;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "Some text // Some comment",
+                        "Line3",
+                        "Some other text //Some other comment",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+                
+                [Test]
+                public void ShouldIncludeLinesThatContainValidText_AndACodeBlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 5;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "Some text /* First line of comment",
+                        "Second line of comment",
+                        "Last line of comment */",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
                     var sut = new LineCounterTestBuilder()
                         .FileDoesExist(filePath)
                         .WithAllLinesFromFile(filePath, linesFromFile)

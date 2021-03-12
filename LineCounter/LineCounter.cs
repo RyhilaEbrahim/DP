@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -26,8 +27,40 @@ namespace LineCounter
             }
 
             var fileLines = _wrapper.ReadAllLines(filePath)
-                                                   .Where(x => x != string.Empty);
-            return fileLines.Count();
+                .Select(x => x.TrimStart())
+                .Where(x => x != string.Empty && !x.StartsWith("//"));
+
+            var finalFileLines = new List<string>();
+            var inCommentBlock = false;
+
+            foreach (var fileLine in fileLines)
+            {
+                var blockStartsOnLineWithValidCode = false;
+                if (fileLine.StartsWith("/*"))
+                {
+                    inCommentBlock = true;
+                }
+                else
+                {
+                    if (fileLine.Contains("/*"))
+                    {
+                        inCommentBlock = true;
+                        blockStartsOnLineWithValidCode = true;
+                    }
+                }
+                
+                if (!inCommentBlock || blockStartsOnLineWithValidCode)
+                {
+                    finalFileLines.Add(fileLine);
+                }
+
+                if (fileLine.EndsWith("*/"))
+                {
+                    inCommentBlock = false;
+                }
+            }
+
+            return finalFileLines.Count();
         }
     }
 }
