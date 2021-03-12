@@ -25,7 +25,8 @@ namespace LineCounter
                 throw new FileNotFoundException("File not found.");
             }
 
-            var fileLines = _wrapper.ReadAllLines(filePath);
+            var fileLines = _wrapper.ReadAllLines(filePath)
+                                                   .Where(x => x != string.Empty);
             return fileLines.Count();
         }
     }

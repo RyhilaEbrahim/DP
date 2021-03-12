@@ -46,31 +46,65 @@ namespace LineCounter.Tests
                 //Act
                 var result = sut.CountLinesOfCode(filePath);
                 //Assert
-                Assert.That(result,Is.EqualTo(expected));
+                Assert.That(result, Is.EqualTo(expected));
             }
 
-            [Test]
-            public void GivenFileIsNotEmpty_ShouldReturnLineCount()
+            [TestFixture]
+            public class GivenFileIsNotEmpty
             {
-                //Arrange
-                var filePath = "test";
-                const int expected = 5;
-                var linesFromFile = new List<string>()
+                [TestFixture]
+                public class AndHasNoBlankLines
                 {
-                    "Line1",
-                    "Line2",
-                    "Line3",
-                    "Line4",
-                    "Line5"
-                };
-                var sut = new LineCounterTestBuilder()
-                    .FileDoesExist(filePath)
-                    .WithAllLinesFromFile(filePath,linesFromFile)
-                    .Build();
-                //Act
-                var result = sut.CountLinesOfCode(filePath);
-                //Assert
-                Assert.That(result, Is.EqualTo(expected));
+                    [Test]
+                    public void ShouldReturnLineCount()
+                    {
+                        //Arrange
+                        var filePath = "test";
+                        const int expected = 5;
+                        var linesFromFile = new List<string>()
+                        {
+                            "Line1",
+                            "Line2",
+                            "Line3",
+                            "Line4",
+                            "Line5"
+                        };
+                        var sut = new LineCounterTestBuilder()
+                            .FileDoesExist(filePath)
+                            .WithAllLinesFromFile(filePath, linesFromFile)
+                            .Build();
+                        //Act
+                        var result = sut.CountLinesOfCode(filePath);
+                        //Assert
+                        Assert.That(result, Is.EqualTo(expected));
+                    }
+                }
+
+                [Test]
+                public void ShouldExcludeBlankLinesAndReturnLineCount()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 6;
+                    var linesFromFile = new List<string>()
+                        {
+                            "Line1",
+                             string.Empty,
+                            "Line2",
+                            "Line3",
+                            "Line4",
+                            "Line5",
+                            "Line6"
+                        };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
             }
         }
     }
