@@ -27,9 +27,16 @@ namespace LineCounter
             }
 
             var fileLines = _wrapper.ReadAllLines(filePath)
-                .Select(x => x.TrimStart())
+                .Select(line => line.Trim())
                 .Where(x => x != string.Empty && !x.StartsWith("//"));
 
+            //var finalFileLines = GetFinalFileLines(fileLines);
+            var finalFileLines = GetFinalFileLinesRefactor(fileLines);
+            return finalFileLines.Count();
+        }
+
+        private static List<string> GetFinalFileLines(IEnumerable<string> fileLines)
+        {
             var finalFileLines = new List<string>();
             var inCommentBlock = false;
 
@@ -48,7 +55,7 @@ namespace LineCounter
                         blockStartsOnLineWithValidCode = true;
                     }
                 }
-                
+
                 if (!inCommentBlock || blockStartsOnLineWithValidCode)
                 {
                     finalFileLines.Add(fileLine);
@@ -58,9 +65,36 @@ namespace LineCounter
                 {
                     inCommentBlock = false;
                 }
+                else
+                {
+                    if (fileLine.Contains("*/"))
+                    {
+                        inCommentBlock = false;
+                        finalFileLines.Add(fileLine);
+                    }
+                }
             }
 
-            return finalFileLines.Count();
+            return finalFileLines;
         }
+
+        private static List<string> GetFinalFileLinesRefactor(IEnumerable<string> fileLines)
+        {
+            var finalFileLines = new List<string>();
+            foreach (var line in fileLines)
+            {
+                if (line.StartsWith("/*") && line.EndsWith("*/")) continue;
+
+            }
+           
+
+            return finalFileLines;
+        }
+
+        /* TODO:
+         * File Extensions
+         * File Intergration testing
+         *
+         */
     }
 }

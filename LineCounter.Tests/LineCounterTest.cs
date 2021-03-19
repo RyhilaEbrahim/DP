@@ -105,32 +105,6 @@ namespace LineCounter.Tests
                     //Assert
                     Assert.That(result, Is.EqualTo(expected));
                 }
-
-                [Test]
-                public void ShouldExcludeLinesThatAreDoubleForwardSlashComments()
-                {
-                    //Arrange
-                    var filePath = "test";
-                    const int expected = 5;
-                    var linesFromFile = new List<string>()
-                    {
-                        "Line1",
-                        "// Some comment",
-                        "Line3",
-                        " //Some other comment",
-                        "Line5",
-                        "Line6",
-                        "Line7"
-                    };
-                    var sut = new LineCounterTestBuilder()
-                        .FileDoesExist(filePath)
-                        .WithAllLinesFromFile(filePath, linesFromFile)
-                        .Build();
-                    //Act
-                    var result = sut.CountLinesOfCode(filePath);
-                    //Assert
-                    Assert.That(result, Is.EqualTo(expected));
-                }
                 
                 [Test]
                 public void ShouldExcludeLinesThatAreContainedWithinABlockComment()
@@ -238,6 +212,146 @@ namespace LineCounter.Tests
                     //Assert
                     Assert.That(result, Is.EqualTo(expected));
                 }
+
+                [Test]
+                public void ShouldIncludeAllLinesThatHaveValidTextBeforeStartOfBlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 4;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "Some text /* First line of comment",
+                        "Second line of comment",
+                        "Last line of comment */",
+                        "Some text again /* Some valid comment",
+                        "Second line of valid comment",
+                        "Last line of valid comment */",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+
+                [Test]
+                public void ShouldIncludeLinesThatContainValidText_AndIsAtEndOfCodeBlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 5;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "/* First line of comment",
+                        "Second line of comment",
+                        "Last line of comment */ Some valid code",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+
+
+                [Test]
+                public void ShouldExcludeLinesThatContainEmptySpace_AndIsAtEndOfCodeBlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 4;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "/* First line of comment",
+                        "Second line of comment",
+                        "Last line of comment */ ",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+
+                [Test]
+                public void ShouldExcludeLineThatIsOnlyABlockComment()
+                {
+                    //Arrange
+                    var filePath = "test";
+                    const int expected = 6;
+                    var linesFromFile = new List<string>()
+                    {
+                        "Line1",
+                        "/* First line of comment*/",
+                        "Line3",
+                        "Line4",
+                        "Line5",
+                        "Line6",
+                        "Line7"
+                    };
+                    var sut = new LineCounterTestBuilder()
+                        .FileDoesExist(filePath)
+                        .WithAllLinesFromFile(filePath, linesFromFile)
+                        .Build();
+                    //Act
+                    var result = sut.CountLinesOfCode(filePath);
+                    //Assert
+                    Assert.That(result, Is.EqualTo(expected));
+                }
+
+                [TestFixture]
+                public class AndContainsASingleLineComment
+                {
+                    [TestCase("// */some text")]
+                    [TestCase("// /* some other text")]
+                    [TestCase("// some other text")]
+                    [TestCase(" // some random text")]
+                    public void ShouldExcludeLine(string singleLineComment)
+                    {
+                        //Arrange
+                        var filePath = "test";
+                        const int expected = 6;
+                        var linesFromFile = new List<string>()
+                        {
+                            "Line1",
+                            singleLineComment,
+                            "Line3",
+                            "Line4",
+                            "Line5",
+                            "Line6",
+                            "Line7"
+                        };
+                        var sut = new LineCounterTestBuilder()
+                            .FileDoesExist(filePath)
+                            .WithAllLinesFromFile(filePath, linesFromFile)
+                            .Build();
+                        //Act
+                        var result = sut.CountLinesOfCode(filePath);
+                        //Assert
+                        Assert.That(result, Is.EqualTo(expected));
+                    }
+                }
+               
             }
         }
     }
