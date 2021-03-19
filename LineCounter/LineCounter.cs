@@ -26,75 +26,72 @@ namespace LineCounter
                 throw new FileNotFoundException("File not found.");
             }
 
-            var fileLines = _wrapper.ReadAllLines(filePath)
-                .Select(line => line.Trim())
-                .Where(x => x != string.Empty && !x.StartsWith("//"));
+            var cleanedFileLines = GetCleanedFileLinesFrom(filePath);
+            var validCodeFileLines = GetValidCodeLines(cleanedFileLines);
 
-            //var finalFileLines = GetFinalFileLines(fileLines);
-            var finalFileLines = GetFinalFileLinesRefactor(fileLines);
-            return finalFileLines.Count();
+            return validCodeFileLines.Count();
         }
 
-        private static List<string> GetFinalFileLines(IEnumerable<string> fileLines)
+        private IEnumerable<string> GetCleanedFileLinesFrom(string filePath)
         {
-            var finalFileLines = new List<string>();
+            return _wrapper.ReadAllLines(filePath)
+                .Select(line => line.Trim());
+        }
+
+        private static IEnumerable<string> GetValidCodeLines(IEnumerable<string> fileLines)
+        {
+            var validCodeLines = new List<string>();
             var inCommentBlock = false;
 
-            foreach (var fileLine in fileLines)
-            {
-                var blockStartsOnLineWithValidCode = false;
-                if (fileLine.StartsWith("/*"))
-                {
-                    inCommentBlock = true;
-                }
-                else
-                {
-                    if (fileLine.Contains("/*"))
-                    {
-                        inCommentBlock = true;
-                        blockStartsOnLineWithValidCode = true;
-                    }
-                }
-
-                if (!inCommentBlock || blockStartsOnLineWithValidCode)
-                {
-                    finalFileLines.Add(fileLine);
-                }
-
-                if (fileLine.EndsWith("*/"))
-                {
-                    inCommentBlock = false;
-                }
-                else
-                {
-                    if (fileLine.Contains("*/"))
-                    {
-                        inCommentBlock = false;
-                        finalFileLines.Add(fileLine);
-                    }
-                }
-            }
-
-            return finalFileLines;
-        }
-
-        private static List<string> GetFinalFileLinesRefactor(IEnumerable<string> fileLines)
-        {
-            var finalFileLines = new List<string>();
             foreach (var line in fileLines)
             {
-                if (line.StartsWith("/*") && line.EndsWith("*/")) continue;
+                var isSingleCommentLine = line.StartsWith("//");
+                if (string.IsNullOrEmpty(line) || isSingleCommentLine)
+                {
+                    continue;
+                }
 
+                validCodeLines = GetLinesExcludingCommentBlocks(line, ref inCommentBlock, validCodeLines);
             }
-           
 
-            return finalFileLines;
+            return validCodeLines;
         }
 
-        /* TODO:
-         * File Extensions
-         * File Intergration testing
-         *
-         */
+        private static List<string> GetLinesExcludingCommentBlocks(string line, ref bool inCommentBlock, List<string> validCodeLines)
+        {
+            var blockStartsOnLineWithValidCode = false;
+            if (line.StartsWith("/*"))
+            {
+                inCommentBlock = true;
+            }
+            else
+            {
+                if (line.Contains("/*"))
+                {
+                    inCommentBlock = true;
+                    blockStartsOnLineWithValidCode = true;
+                }
+            }
+
+            if (!inCommentBlock || blockStartsOnLineWithValidCode)
+            {
+                validCodeLines.Add(line);
+            }
+
+            if (line.EndsWith("*/"))
+            {
+                inCommentBlock = false;
+            }
+            else
+            {
+                if (line.Contains("*/"))
+                {
+                    inCommentBlock = false;
+                    validCodeLines.Add(line);
+                }
+            }
+
+            return validCodeLines;
+        }
     }
 }
